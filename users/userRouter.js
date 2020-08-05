@@ -4,12 +4,23 @@ const postDB = require("../posts/postDb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  res.send("users? Hello there.");
+router.post("/", validateUser, (req, res) => {
+  userDB
+    .insert(req.body)
+    .then((bdRes) => {
+      res.status(201).send(bdRes);
+    })
+    .catch((err) => res.status(500).end());
 });
 
-router.post("/:id/posts", (req, res) => {
-  // do your magic!
+router.post("/:id/posts", validatePost, (req, res) => {
+  req.body.user_id = req.params.id;
+  postDB
+    .insert(req.body)
+    .then((dbRes) => {
+      res.status(201).send(dbRes).end();
+    })
+    .catch((err) => res.status(500).end());
 });
 
 router.get("/", (req, res) => {
@@ -34,8 +45,13 @@ router.get("/:id/posts", validateUserId, (req, res) => {
     .catch((err) => res.status(500).end());
 });
 
-router.delete("/:id", (req, res) => {
-  // do your magic!
+router.delete("/:id", validateUserId, (req, res) => {
+  userDB
+    .remove(req.user.id)
+    .then((dbRes) => {
+      res.status(200).send("Deleted successfully!");
+    })
+    .catch((err) => res.status(500).end());
 });
 
 router.put("/:id", (req, res) => {
@@ -59,7 +75,19 @@ function validateUserId(req, res, next) {
 }
 
 function validateUser(req, res, next) {
-  // do your magic!
+  if (!req.body) res.status(400).json({ message: "missing user data" }).end();
+  if (!req.body.name)
+    res.status(400).json({ message: "missing required name field" }).end();
+  next();
+}
+
+function validatePost(req, res, next) {
+  if (!req.body) res.status(400).json({ message: "missing post data" }).end();
+  if (!req.body.text)
+    res.status(400).json({ message: "missing required text field" }).end();
+  // if (!req.body.user_id)
+  //   res.status(400).json({ message: "missing required user_id field" }).end();
+  next();
 }
 
 module.exports = router;
