@@ -10,7 +10,7 @@ router.post("/", validateUser, (req, res) => {
     .then((bdRes) => {
       res.status(201).send(bdRes);
     })
-    .catch((err) => res.status(500).end());
+    .catch((err) => res.status(500));
 });
 
 router.post("/:id/posts", validatePost, (req, res) => {
@@ -20,7 +20,7 @@ router.post("/:id/posts", validatePost, (req, res) => {
     .then((dbRes) => {
       res.status(201).send(dbRes).end();
     })
-    .catch((err) => res.status(500).end());
+    .catch((err) => res.status(500));
 });
 
 router.get("/", (req, res) => {
@@ -54,8 +54,13 @@ router.delete("/:id", validateUserId, (req, res) => {
     .catch((err) => res.status(500).end());
 });
 
-router.put("/:id", (req, res) => {
-  // do your magic!
+router.put("/:id", validateUserId, validateUser, (req, res) => {
+  userDB
+    .update(req.params.id, req.body)
+    .then((dbRes) => {
+      res.status(201).json(req.body);
+    })
+    .catch((err) => res.status(500).end());
 });
 
 //custom middleware
@@ -85,8 +90,6 @@ function validatePost(req, res, next) {
   if (!req.body) res.status(400).json({ message: "missing post data" }).end();
   if (!req.body.text)
     res.status(400).json({ message: "missing required text field" }).end();
-  // if (!req.body.user_id)
-  //   res.status(400).json({ message: "missing required user_id field" }).end();
   next();
 }
 
